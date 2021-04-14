@@ -29,7 +29,8 @@ const Model = mongoose.model("User", UserSchema as PassportLocalSchema);
 declare global
 {
     export type UserDocument = mongoose.Document &
-    {
+    {   
+        _id: String,
         username: String,
         emailAddress: String,
         displayName: String
