@@ -9,5 +9,8 @@
         "removeComments": true,
         "moduleResolution": "Node",
         "esModuleInterop": true
-    }
+    },
+    "exclude":[
+        "node_modules"
+    ]
 }

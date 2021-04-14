@@ -11,6 +11,14 @@ import session from 'express-session';
 import passport from 'passport';
 import passportLocal from 'passport-local';
 
+//modules for jwt
+import cors from 'cors';
+import passportJWT from 'passport-jwt';
+
+// define JWT alias
+let JWTStrategy = passportJWT.Strategy;
+let ExtractJWT = passportJWT.ExtractJwt;
+
 // authentication objects
 let localStrategy = passportLocal.Strategy; // alias
 import User from '../Models/user';
@@ -26,6 +34,7 @@ export default app;
 
 // DB configuration
 import * as DBConfig from './db';
+import { userInfo } from 'node:os';
 mongoose.connect(DBConfig.RemoteURI, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const db = mongoose.connection;
@@ -44,6 +53,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../../Client/')));
 app.use(express.static(path.join(__dirname, '../../node_modules/')));
+
+app.use(cors());
 
 // setup express session
 app.use(session({
@@ -65,6 +76,25 @@ passport.use(User.createStrategy());
 // serialize and deserialize user data
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+let jwtOptions = 
+{
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+  secretOrKey: DBConfig.Secret
+};
+
+let strategy = new JWTStrategy(jwtOptions, (jwt_payload, done) => 
+{
+  User.findById(jwt_payload.id)
+  .then(user => {
+    return done(null, user);
+  })
+  .catch(err => {
+    return done (err, false);
+  });
+});
+
+passport.use(strategy);
 
 // route configuration
 app.use('/', indexRouter);
